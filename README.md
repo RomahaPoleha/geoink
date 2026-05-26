@@ -1,83 +1,114 @@
-# geoink — API для геометок и сообщений
+# GeoInk — API для геометок с сообщениями (для стажировки в компанию RED Collar)
 
-Проект реализует REST API для создания географических точек, привязки к ним сообщений и поиска по радиусу.  
-Соответствует требованиям тестового задания на стажировку.
+REST API для создания географических точек, привязки к ним текстовых сообщений и поиска по радиусу. Реализовано на **Django + DRF** с использованием формулы гаверсинуса для геопоиска — **без зависимости от PostGIS/GeoDjango**.
 
----
-
-## 📋 Техническое описание
-
-- **Язык**: Python 3.10+
-- **Фреймворк**: Django 5.0 + Django REST Framework
-- **База данных**: SQLite (встроенная, без внешних зависимостей)
-- **Геопоиск**: реализован через формулу гаверсинуса (без GeoDjango/PostGIS)
-- **Авторизация**: Token-based (через `rest_framework.authtoken`)
-- **Безопасность**: все эндпоинты защищены — требуется токен
-- **Тесты**: покрыты с помощью `Django TestCase`
-
-Проект **не требует  PostGIS или других гео-библиотек** — запускается на любом компьютере с Python.
+> Лёгкий бэкенд для гео-сервисов, который можно запустить на любом хостинге с поддержкой Python.
 
 ---
 
-## ▶️ Запуск проекта
+## Функционал
+- Создание/редактирование/удаление гео-точек (GeoPin)
+- Привязка текстовых сообщений (PinMemo) к точкам
+- Поиск точек и сообщений в радиусе (формула гаверсинуса)
+- Токен-авторизация (DRF Authtoken)
+- Покрытие тестами (Django TestCase)
+- Работа на SQLite — не требует настройки БД
 
-### Требования
-- Python 3.10+
-- Windows / Linux / macOS
+---
 
-### Инструкция
-1. Клонируйте репозиторий c GitHub
-   
-2. Создайте и активируйте виртуальное окружение:
-   ```bash
-   python -m venv venv
-   Для Windows: venv\Scripts\activate        
-   Linux/macOS: source venv/bin/activate
-   ```
+## Технологии
+| Компонент | Версия / Библиотека |
+|-----------|---------------------|
+| Фреймворк | Django 5.0 + Django REST Framework |
+| База данных | SQLite (разработка) / PostgreSQL (продакшн) |
+| Авторизация | `rest_framework.authtoken` |
+| Геопоиск | Формула гаверсинуса (чистый Python) |
+| Тесты | `django.test.TestCase` |
+| Документация | DRF Browsable API + README |
 
-3. Установите зависимости
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Примените миграции
-   ```bash
-   python manage.py makemigrations 
-   python manage.py migrate
-   ```
-5. Создайте суперпользователя (логин/пароль для получения токена):
-   ```bash
-   python manage.py createsuperuser
-   # Рекомендуется: логин — admin, пароль — 123 (для теста)
-   ```
+---
 
-6. Запустите сервер:
-   ```bash
-   python manage.py runserver
-   ```
-Сервер будет доступен по адресу: http://127.0.0.1:8000
-   
+## Установка и запуск
 
-## Примеры запросов (curl)
-
-1. Получение токена авторизации 
-Откройте 2 окно терминала и отправьте POST-запрос на эндпоинт:
-   ```bash
-   curl -X POST http://127.0.0.1:8000/api-token-auth/ -d "username=admin&password=123"
-   ```
-
-В обратном сообщении получите ваш токен - пример
-```json
-{"token":"e25d4330a270f9be7292267a8552f25e2b569a2a"}
+### 1. Клонирование
+```bash
+git clone https://github.com/RomahaPoleha/geoink.git
+cd geoink
 ```
-2. Создать сообщение
-   ```bash
-    curl -X POST http://127.0.0.1:8000/api/points/messages/ -H "Authorization: Token ВАШ_ТОКЕН" -H "Content-Type: application/json" -d "{\"pin_id\": 1, \"content\": \"Работает!\"}"
-   ```
-3. Поиск точек
-   ```bash
-    curl "http://127.0.0.1:8000/api/points/search/?latitude=43.1056&longitude=131.8735&radius=10" -H "Authorization: Token ВАШ_ТОКЕН"
-   ```
-4. Поиск сообщений
-   ```bash    
-    curl "http://127.0.0.1:8000/api/points/messages/search/?latitude=43.1056&longitude=131.8735&radius=10" -H "Authorization: Token ВАШ_ТОКЕН"
-   ```
+
+### 2. Виртуальное окружение
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3. Зависимости
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Миграции и суперпользователь
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+### 5. Запуск сервера
+```bash
+python manage.py runserver
+```
+
+# Авторизация
+
+## Получение токена
+```bash
+curl -X POST http://127.0.0.1:8000/api-token-auth/ \
+  -d "username=admin&password=your_password"
+```
+
+# Примеры запросов
+```bash
+curl -X POST http://127.0.0.1:8000/api/points/ \
+  -H "Authorization: Token ВАШ_ТОКЕН" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "latitude": 43.1056,
+    "longitude": 131.8735,
+    "title": "Моя метка",
+    "description": "Тут я"
+  }'
+```
+
+## Добавить сообщение к точке
+```bash
+curl -X POST http://127.0.0.1:8000/api/points/messages/ \
+  -H "Authorization: Token ВАШ_ТОКЕН" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pin_id": 1,
+    "content": "Тут я был!"
+  }'
+```
+# Поиск точек в радиусе 10 км
+```bash
+curl "http://127.0.0.1:8000/api/points/search/?latitude=43.1056&longitude=131.8735&radius=10" \
+  -H "Authorization: Token ВАШ_ТОКЕН"
+```
+
+# Поиск сообщений в радиусе
+```bash
+curl "http://127.0.0.1:8000/api/points/messages/search/?latitude=43.1056&longitude=131.8735&radius=10" \
+  -H "Authorization: Token ВАШ_ТОКЕН"
+```
+
+#Тестирование
+```bash
+# Запустить все тесты
+python manage.py test
+
+# Запустить с выводом подробностей
+python manage.py test --verbosity=2
+```
